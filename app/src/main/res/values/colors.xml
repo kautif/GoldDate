@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#223C53</color>
+    <color name="colorPrimaryDark">#223C53</color>
+    <color name="colorAccent">#BC9A5F</color>
+    <color name="colorGold">#BC9A5F</color>
+    <color name="chipColor">#23374f</color>
+
+</resources>

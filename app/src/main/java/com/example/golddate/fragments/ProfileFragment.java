@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -62,6 +64,9 @@ public class ProfileFragment extends Fragment {
     ChipGroup mLangChipGroup;
     List<String> mInterestChipList;
     List<String> mLangChipList;
+
+    Button addInterestsBtn;
+    Button addLangBtn;
 
     FirebaseAuth mAuth;
     FirebaseFirestore mStore;
@@ -93,8 +98,13 @@ public class ProfileFragment extends Fragment {
         mInterestChipList = new ArrayList<>();
         mLangChipList = new ArrayList<>();
 
+        addInterestsBtn = view.findViewById(R.id.add_interests_button);
+        addLangBtn = view.findViewById(R.id.add_lang_button);
         saveBtn = view.findViewById(R.id.save_button);
         logoutBtn = view.findViewById(R.id.logout_button);
+
+        final Pattern symbols = Pattern.compile("[^a-z0-9.*\\d.*]", Pattern.CASE_INSENSITIVE);
+        final Pattern digits = Pattern.compile("[.*\\d.*]", Pattern.CASE_INSENSITIVE);
 
         getProfile();
 
@@ -115,12 +125,41 @@ public class ProfileFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView textView, int actionID, KeyEvent keyEvent) {
                 if (actionID == EditorInfo.IME_ACTION_GO) {
+                    Matcher interestInt = digits.matcher(mInterest.getText().toString());
+                    boolean interestIntCheck = interestInt.find();
+                    Matcher interestSymbols = symbols.matcher(mInterest.getText().toString());
+                    boolean interestSymbolCheck = interestSymbols.find();
+                    if (!interestSymbolCheck || !interestIntCheck || mInterest.getText().toString().equals("")) {
+                        mInterest.setError("Letters only. No spaces, numbers, or special characters.");
+                        mInterest.requestFocus();
+                    } else {
+                        mInterestChipList.add(mInterest.getText().toString());
+                        displayInterestChips(mInterestChipList);
+                        mInterest.setText("");
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+
+
+        addInterestsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Matcher interestInt = digits.matcher(mInterest.getText().toString());
+                boolean interestIntCheck = interestInt.find();
+                Matcher interestSymbols = symbols.matcher(mInterest.getText().toString());
+                boolean interestSymbolCheck = interestSymbols.find();
+                if (interestSymbolCheck || interestIntCheck || mInterest.getText().toString().equals("")) {
+                    mInterest.setError("Letters only. No spaces, numbers, or special characters.");
+                    mInterest.requestFocus();
+                } else {
                     mInterestChipList.add(mInterest.getText().toString());
                     displayInterestChips(mInterestChipList);
                     mInterest.setText("");
-                    return true;
                 }
-                return false;
             }
         });
 
@@ -128,12 +167,41 @@ public class ProfileFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView textView, int actionID, KeyEvent keyEvent) {
                 if (actionID == EditorInfo.IME_ACTION_GO) {
+                    Matcher langSymbols = symbols.matcher(mLang.getText().toString());
+                    Matcher langInt = digits.matcher(mLang.getText().toString());
+                    boolean langSymbolCheck = langSymbols.find();
+                    boolean langIntCheck = langInt.find();
+                    if (!langSymbolCheck || !langIntCheck || mLang.getText().toString().equals("")) {
+                        mLang.setError("Letters only. No spaces, numbers, or special characters.");
+                        mLang.requestFocus();
+                    } else {
+                        mLangChipList.add(mLang.getText().toString());
+                        displayLangChips(mLangChipList);
+                        mLang.setText("");
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+
+
+        addLangBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Matcher langSymbols = symbols.matcher(mLang.getText().toString());
+                Matcher langInt = digits.matcher(mLang.getText().toString());
+                boolean langSymbolCheck = langSymbols.find();
+                boolean langIntCheck = langInt.find();
+                if (langSymbolCheck || langIntCheck || mLang.getText().toString().equals("")) {
+                    mLang.setError("Letters only. No spaces, numbers, or special characters.");
+                    mLang.requestFocus();
+                } else {
                     mLangChipList.add(mLang.getText().toString());
                     displayLangChips(mLangChipList);
                     mLang.setText("");
-                    return true;
                 }
-                return false;
             }
         });
 
@@ -262,7 +330,7 @@ public class ProfileFragment extends Fragment {
 //            Log.i("Image path", url.getPath().substring(url.getPath().lastIndexOf("/") + 1));
             imageName = url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
             Glide.with(this).load(imageURI).into(mCircleImage);
-            //Now you can do whatever you want with your inpustream, save it as file, upload to a server, decode a bitmap...
+            //Now you can do whatever you want with your input stream, save it as file, upload to a server, decode a bitmap...
         } else {
             Toast.makeText(getContext(), "No image selected", Toast.LENGTH_SHORT).show();
         }
@@ -270,8 +338,10 @@ public class ProfileFragment extends Fragment {
 
     private void displayInterestChips(final List<String> mChipList) {
         mInterestChipGroup.removeAllViews();
+        Log.i("displayInterestChips", "function running");
         for (String c : mChipList) {
-            Chip chip = (Chip) getActivity().getLayoutInflater().inflate(R.layout.single_chip_item, null, false);
+            Log.i("Chip", c);
+            Chip chip = (Chip) this.getLayoutInflater().inflate(R.layout.single_chip_item, null, false);
             chip.setText(c);
 
             chip.setOnClickListener(new View.OnClickListener() {
@@ -282,7 +352,6 @@ public class ProfileFragment extends Fragment {
                     mChipList.remove(targetChip.getText().toString());
                 }
             });
-
             mInterestChipGroup.addView(chip);
         }
     }
@@ -290,7 +359,7 @@ public class ProfileFragment extends Fragment {
     private void displayLangChips(final List<String> mChipList) {
         mLangChipGroup.removeAllViews();
         for (String c : mChipList) {
-            Chip chip = (Chip) getActivity().getLayoutInflater().inflate(R.layout.single_chip_item, null, false);
+            Chip chip = (Chip) this.getLayoutInflater().inflate(R.layout.single_chip_item, null, false);
             chip.setText(c);
 
             chip.setOnClickListener(new View.OnClickListener() {

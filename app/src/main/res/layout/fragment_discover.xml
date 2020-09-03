@@ -5,17 +5,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+    <ImageView
+        android:id="@+id/broken_heart_imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="150dp"
+        android:layout_marginTop="150dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/broken_heart_trans" />
+
+    <TextView
+        android:id="@+id/no_matches_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="No Matches Available Right Now"
+        android:textAlignment="center"
+        android:textSize="36sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/broken_heart_imageView" />
+
     <FrameLayout
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
+            android:id="@+id/match_buttons_linearLayout"
             android:layout_width="match_parent"
-            android:layout_height="80dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:gravity="center"
             android:orientation="horizontal">
@@ -24,20 +51,23 @@
                 android:id="@+id/rejectBtn"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:background="@drawable/icon" />
+                android:background="@drawable/ic_reject_red_24dp" />
 
             <ImageButton
                 android:id="@+id/acceptBtn"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_marginLeft="30dp"
-                android:background="@drawable/icon" />
+                android:background="@drawable/ic_check_green_24dp"
+                android:onClick="acceptMsg" />
         </LinearLayout>
 
         <com.mindorks.placeholderview.SwipePlaceHolderView
             android:id="@+id/swipeView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+
+        </com.mindorks.placeholderview.SwipePlaceHolderView>
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

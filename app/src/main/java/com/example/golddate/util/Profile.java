@@ -1,5 +1,8 @@
 package com.example.golddate.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Profile extends ProfileID {
 
 //    All has to match key names in Firebase
@@ -9,6 +12,26 @@ public class Profile extends ProfileID {
     private int birth_year;
     private String img_url;
     private String age;
+
+    public List<String> getInterest() {
+        return interest;
+    }
+
+    public void setInterest(ArrayList<String> interest) {
+        this.interest = interest;
+    }
+
+    private List<String> interest;
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    private String desc;
 
     public String getImg_url() {
         return img_url;

@@ -5,12 +5,19 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.golddate.R;
@@ -26,6 +33,8 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.mindorks.placeholderview.SwipeDecor;
 import com.mindorks.placeholderview.SwipePlaceHolderView;
 import com.mindorks.placeholderview.Utils;
+
+import org.w3c.dom.Document;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -43,6 +52,21 @@ public class DiscoverFragment extends Fragment {
     private String swipedName;
     private String swiperImage;
     private String swipedImage;
+
+    private Boolean userHasNoLikes;
+
+    private ImageButton rejectBtn;
+    private ImageButton acceptBtn;
+
+    private TextView noMatchWarning;
+    private ImageView brokenHeart;
+
+    private List<String> likesList;
+    private List<String> currentLikesList;
+    private String currentLike;
+    private int userIndex;
+    private int i;
+
     List<Profile> mProfileList;
     SwipeCard.SelectedID selectedID;
 
@@ -60,68 +84,92 @@ public class DiscoverFragment extends Fragment {
         mStore = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         mProfileList = new ArrayList<>();
-
-//        mSwipeView.getBuilder()
-//                .setDisplayViewCount(3)
-//                .setSwipeDecor(new SwipeDecor()
-//                        .setPaddingTop(20)
-//                        .setRelativeScale(0.01f)
-//                        .setSwipeInMsgLayoutId(R.layout.swipe_accept_view)
-//                        .setSwipeOutMsgLayoutId(R.layout.swipe_reject_view));
-
+        acceptBtn = view.findViewById(R.id.acceptBtn);
+        rejectBtn = view.findViewById(R.id.rejectBtn);
+        brokenHeart = view.findViewById(R.id.broken_heart_imageView);
+        noMatchWarning = view.findViewById(R.id.no_matches_textView);
+        userHasNoLikes = false;
+        currentLike = "";
         final List<Profile> mList = new ArrayList<>();
+        likesList = new ArrayList<>();
+        currentLikesList = new ArrayList<>();
+        userIndex = 0;
+        i = 0;
+
+        mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> userLikesTask) {
+//                            Log.i("current user likes", "onComplete: " + userLikesTask.getResult().get("likes"));
+                if (userLikesTask.isSuccessful()) {
+                    currentLikesList = (List<String>) userLikesTask.getResult().get("likes");
+                }
+            }
+        });
+
         mStore.collection("Users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
-                    for (DocumentSnapshot documentSnapshot : task.getResult()) {
-                        Log.i("DiscoverFragment", "onComplete: " + documentSnapshot.getId());
-                        String docID = documentSnapshot.getId();
+                    while (userIndex < task.getResult().getDocuments().size()) {
+                        if (task.getResult().getDocuments().get(userIndex).getId().equals(mAuth.getCurrentUser().getUid())) {
+                            currentLikesList = (List<String>) task.getResult().getDocuments().get(userIndex).get("likes");
+                        }
+                        userIndex += 1;
+                    }
 
-                        if (!docID.equals(mAuth.getCurrentUser().getUid())) {
+                    for (final DocumentSnapshot documentSnapshot : task.getResult()) {
+                        final String docID = documentSnapshot.getId();
+                        if (i < currentLikesList.size()) {
+                            currentLike = currentLikesList.get(i);
+                            Log.i("currentLike", "onComplete: " + currentLike);
+                            i += 1;
+                        }
+
+
+                        if (!docID.equals(mAuth.getCurrentUser().getUid()) && !docID.equals(currentLike)) {
                             Profile profile = documentSnapshot.toObject(Profile.class).withId(docID);
                             mProfileList.add(profile);
                         }
                     }
+                    if (mProfileList.size() == 0) {
+                        noMatchWarning.setText("No Matches Available Right Now");
+                        brokenHeart.setVisibility(View.VISIBLE);
+                        noMatchWarning.setVisibility(View.VISIBLE);
+                        acceptBtn.setVisibility(View.GONE);
+                        rejectBtn.setVisibility(View.GONE);
+                    } else {
+                        brokenHeart.setVisibility(View.GONE);
+                        noMatchWarning.setVisibility(View.GONE);
+                        acceptBtn.setVisibility(View.VISIBLE);
+                        rejectBtn.setVisibility(View.VISIBLE);
+                    }
 
                     for (Profile profile : mProfileList) {
                         mSwipeView.addView(new SwipeCard(mContext, profile, mSwipeView, selectedID));
+                        Log.i("DiscoverCard", "onComplete: " + profile);
                     }
                 }
             }
         });
-//        mList.add(new Profile(  "Sofia",
-//                                "https://pbs.twimg.com/profile_images/572905100960485376/GK09QnNG.jpeg",
-//                                "20",
-//                                "New York"));
-//
-//        mList.add(new Profile(  "Roma",
-//                                "https://i.imgur.com/N6SaAlZ.jpg",
-//                                "22",
-//                                "Irvine"));
-//
-//        mList.add(new Profile(  "Zoya",
-//                                "https://i.imgur.com/wqsvWT4.jpg",
-//                                "28",
-//                                "Atlantic City"));
 
         view.findViewById(R.id.rejectBtn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mSwipeView.doSwipe(true);
-            }
-        });
-
-        view.findViewById(R.id.acceptBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mSwipeView.doSwipe(false);
             }
         });
 
+        view.findViewById(R.id.acceptBtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mSwipeView.doSwipe(true);
+            }
+        });
+
         selectedID = new SwipeCard.SelectedID() {
             @Override
             public void setSwipedCardID(final String cardID, final String cardName) {
+                Log.i("cardID", "setSwipedCardID: " + cardID);
 
                 mStore.collection("Users").document(cardID).collection("Likes")
                         .document(mAuth.getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -139,9 +187,9 @@ public class DiscoverFragment extends Fragment {
                                         saveMatchToDB(cardID, cardName);
                                     } else {
                                         Map<String, Object> map = new HashMap<>();
-                                        map.put("like", true);
-                                        mStore.collection("Users").document(mAuth.getCurrentUser().getUid())
-                                                .collection("Likes").document(cardID).set(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        likesList.add(cardID);
+                                        map.put("likes", likesList);
+                                        mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {

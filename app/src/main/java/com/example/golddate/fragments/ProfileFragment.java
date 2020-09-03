@@ -217,11 +217,6 @@ public class ProfileFragment extends Fragment {
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Log.i("Save Button", "onClick: " + mAuth.getCurrentUser().getUid());
-//                Log.i("imageName", "onClick: " + imageName);
-//                Log.i("URL", "onClick: " + url.getPath().substring(url.getPath().lastIndexOf("/") + 1));
-//                imageName = url.getPath().substring(url.getPath().lastIndexOf("/") + 1);
-
                 if (imageName == null || url == null) {
                     mStorageRef.child(mAuth.getCurrentUser().getUid()).listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
                         @Override

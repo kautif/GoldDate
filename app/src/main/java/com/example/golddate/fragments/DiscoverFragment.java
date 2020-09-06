@@ -28,6 +28,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.mindorks.placeholderview.SwipeDecor;
@@ -67,6 +68,9 @@ public class DiscoverFragment extends Fragment {
     private int userIndex;
     private int i;
 
+    private boolean match;
+    private String newMatch;
+
     List<Profile> mProfileList;
     SwipeCard.SelectedID selectedID;
 
@@ -86,15 +90,23 @@ public class DiscoverFragment extends Fragment {
         mProfileList = new ArrayList<>();
         acceptBtn = view.findViewById(R.id.acceptBtn);
         rejectBtn = view.findViewById(R.id.rejectBtn);
+
         brokenHeart = view.findViewById(R.id.broken_heart_imageView);
         noMatchWarning = view.findViewById(R.id.no_matches_textView);
+
         userHasNoLikes = false;
+
         currentLike = "";
         final List<Profile> mList = new ArrayList<>();
         likesList = new ArrayList<>();
         currentLikesList = new ArrayList<>();
+
         userIndex = 0;
         i = 0;
+
+        newMatch = "";
+
+        Log.i("Logged In User", "onCreateView: " + mAuth.getCurrentUser().getUid());
 
         mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -189,10 +201,11 @@ public class DiscoverFragment extends Fragment {
                                         Map<String, Object> map = new HashMap<>();
                                         likesList.add(cardID);
                                         map.put("likes", likesList);
-                                        mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).update("likes", FieldValue.arrayUnion(cardID)).addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
                                             public void onComplete(@NonNull Task<Void> task) {
                                                 if (task.isSuccessful()) {
+                                                    Log.i("Like Added", "onComplete: " + cardID);
                                                     Toast.makeText(mContext, "Like Added", Toast.LENGTH_SHORT).show();
                                                 }
                                             }
@@ -201,8 +214,7 @@ public class DiscoverFragment extends Fragment {
                                 } else {
                                     Map<String, Object> map = new HashMap<>();
                                     map.put("like", true);
-                                    mStore.collection("Users").document(mAuth.getCurrentUser().getUid())
-                                            .collection("Likes").document(cardID).set(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).update("likes", FieldValue.arrayUnion(cardID)).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             if (task.isSuccessful()) {
@@ -211,6 +223,47 @@ public class DiscoverFragment extends Fragment {
                                         }
                                     });
                                 }
+                            }
+                        });
+
+                        mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull final Task<DocumentSnapshot> task) {
+                                mStore.collection("Users").document(cardID).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> cardIDTask) {
+                                        Log.i("cardID likes", "onComplete: " +  cardIDTask.getResult().get("likes"));
+                                        ArrayList cardIDLikes = (ArrayList) cardIDTask.getResult().get("likes");
+                                        Log.i("local likes", "onComplete: " + cardIDLikes);
+                                        for (int z = 0; z < cardIDLikes.size(); z++) {
+                                            if (cardIDLikes.contains(mAuth.getCurrentUser().getUid())) {
+                                                match = true;
+                                                newMatch = mAuth.getCurrentUser().getUid();
+                                            }
+                                        }
+
+                                        if (match == true) {
+                                            ArrayList matches = new ArrayList();
+                                            matches.add(newMatch);
+                                            mStore.collection("Users").document(cardID).update("matches", matches).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    Toast.makeText(getContext(), "Match Added", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+
+                                            ArrayList myMatches = new ArrayList();
+                                            newMatch = cardID;
+                                            myMatches.add(cardID);
+                                            mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).update("matches", myMatches).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    Toast.makeText(getContext(), "Match Added", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
                             }
                         });
                     }

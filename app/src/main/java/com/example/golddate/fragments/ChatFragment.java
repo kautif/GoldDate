@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
+
+import org.w3c.dom.Document;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -53,16 +56,23 @@ public class ChatFragment extends Fragment {
         matchRecyclerAdapter = new MatchRecyclerAdapter(getContext(), mMatchList);
         mChatRecyclerView.setAdapter(matchRecyclerAdapter);
 
-        mStore.collection("Users").document(mAuth.getCurrentUser().getUid())
-                .collection("Match").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        mStore.collection("Users").document(mAuth.getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (DocumentSnapshot documentSnapshot : task.getResult()) {
-                        Match match = documentSnapshot.toObject(Match.class);
-                        mMatchList.add(match);
-                        matchRecyclerAdapter.notifyDataSetChanged();
-                    }
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                Log.i("CHAT", "onComplete: " + task.getResult().get("matches"));
+                ArrayList chatMatches = new ArrayList();
+                chatMatches = (ArrayList) task.getResult().get("matches");
+                Log.i("chat matches", "onComplete: " + chatMatches);
+                for (int z = 0; z < chatMatches.size(); z++) {
+                    mStore.collection("Users").document((String) chatMatches.get(z)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> matchTask) {
+                            Match match = (Match) matchTask.getResult().toObject(Match.class);
+                            mMatchList.add(match);
+                            matchRecyclerAdapter.notifyDataSetChanged();
+                            Log.i("Chat Match", "onComplete: " + match.getName());
+                        }
+                    });
                 }
             }
         });

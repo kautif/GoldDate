@@ -41,6 +41,14 @@
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="14dp"
                 android:textStyle="normal"/>
+
+            <TextView
+                android:id="@+id/desc_textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textColor="@android:color/black"
+                />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </FrameLayout>

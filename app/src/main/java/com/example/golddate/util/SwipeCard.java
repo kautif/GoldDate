@@ -29,6 +29,9 @@ public class SwipeCard {
     @View(R.id.locationNameTxt)
     public TextView locationNameTxt;
 
+    @View(R.id.desc_textView)
+    public TextView desc;
+
     public Profile mProfile;
     public Context mContext;
     public SwipePlaceHolderView mSwipeView;
@@ -47,6 +50,8 @@ public class SwipeCard {
         Glide.with(mContext).load(mProfile.getImg_url()).into(swipeImageView);
         nameAgeTxt.setText(mProfile.getName() + ", " + mProfile.getAge());
         locationNameTxt.setText(mProfile.getLocation());
+        desc.setText("Description: " + mProfile.getDesc());
+
     }
 
     @SwipeOut
